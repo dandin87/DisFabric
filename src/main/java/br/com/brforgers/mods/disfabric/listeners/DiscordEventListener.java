@@ -29,10 +29,23 @@ public class DiscordEventListener extends ListenerAdapter {
 
     public void onMessageReceived(@NotNull MessageReceivedEvent e) {
         MinecraftServer server = getServer();
+        if(server !=null) {
+            List<ServerPlayerEntity> onlinePlayers = server.getPlayerManager().getPlayerList();
+            int playerNumber = onlinePlayers.size();
+            int maxPlayer = server.getMaxPlayerCount();
+            DisFabric.jda.getPresence().setActivity(Activity.playing(String.valueOf(playerNumber + " / " + maxPlayer)));
+        }
         if(e.getAuthor() != e.getJDA().getSelfUser() && !e.getAuthor().isBot() && e.getChannel().getId().equals(DisFabric.config.channelId) && server != null) {
             if(e.getMessage().getContentRaw().startsWith("!console") && Arrays.asList(DisFabric.config.adminsIds).contains(e.getAuthor().getId())) {
                 String command = e.getMessage().getContentRaw().replace("!console ", "");
 
+                ServerCommandSource source = getDiscordCommandSource();
+                ParseResults<ServerCommandSource> results = server.getCommandManager().getDispatcher().parse(command, source);
+
+                server.getCommandManager().execute(results, command);
+                
+            } else if(e.getMessage().getContentRaw().startsWith("!whitelist")) {
+                String command = e.getMessage().getContentRaw().replace("!whitelist ", "whitelist add ");
                 ServerCommandSource source = getDiscordCommandSource();
                 ParseResults<ServerCommandSource> results = server.getCommandManager().getDispatcher().parse(command, source);
 
